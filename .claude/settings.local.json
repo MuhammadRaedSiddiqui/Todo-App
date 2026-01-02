@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch:*)",
+      "Bash(ls:*)",
+      "Bash(pwsh:*)",
+      "Bash(python -c \" from src.services.task_service import TaskService from src.cli.menu import TodoMenu service = TaskService\\(\\) menu = TodoMenu\\(service\\) # Mock input for testing import sys sys.stdin = open\\(''/dev/tty'' if os.name != ''nt'' else ''CON''\\) \")",
+      "Bash(python:*)"
+    ]
+  }
+}

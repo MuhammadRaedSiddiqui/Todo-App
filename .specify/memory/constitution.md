@@ -1,55 +1,97 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report:
+- Version change: N/A → 1.0.0 (initial creation)
+- Added principles: 5 (all from user input)
+- Removed sections: N/A (constitution newly created)
+- Templates requiring updates:
+  - .specify/templates/plan-template.md ✅ No changes needed (Constitution Check section already references constitution file)
+  - .specify/templates/spec-template.md ✅ No changes needed (aligns with spec-first workflow)
+  - .specify/templates/tasks-template.md ✅ No changes needed (task IDs reference specs)
+- Follow-up TODOs: None
+-->
+
+# Todo App Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Spec-Driven Development
+All code changes MUST be traceable to a Task ID and Spec reference. No production code is written
+without first creating a feature specification in `specs/<feature>/spec.md` and corresponding tasks
+in `specs/<feature>/tasks.md`. This ensures every implementation decision is documented and
+reviewable.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+**Rationale**: Spec-Driven Development creates a single source of truth for feature behavior,
+enables parallel work streams, and provides documentation for future maintainers.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. In-Memory Storage (Phase 1 Constraint)
+For Phase 1, the application MUST store all data in-memory using Python lists or dictionaries.
+No database or file persistence is permitted until Phase 2. Data structures MUST be designed
+with clean separation to facilitate future persistence layer replacement.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**Rationale**: Phase 1 focuses on core functionality and CLI experience. The in-memory constraint
+simplifies development and allows rapid iteration. Clean separation ensures Phase 2 migration
+is straightforward.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Python 3.13+ with UV
+The project MUST use Python 3.13 or higher. All dependencies MUST be managed via UV package
+manager. Dependencies MUST be declared in `pyproject.toml` with locked versions in
+`uv.lock`.
 
-### [PRINCIPLE_6_NAME]
+**Rationale**: UV provides fast, reliable dependency management. Python 3.13 ensures access to
+latest language features and performance improvements.
 
+### IV. Code Quality Standards
+All code MUST follow PEP 8 style guidelines. The codebase MUST use modular design with clear
+separation of concerns. Functions and classes MUST have single responsibilities. CLI interface
+logic MUST be separate from business logic and models.
 
-[PRINCIPLE__DESCRIPTION]
+**Rationale**: Clean, modular code reduces technical debt, improves testability, and makes the
+project accessible to new contributors. PEP 8 compliance ensures consistency.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### V. Specification-First Workflow
+Every feature MUST be defined in `specs/<feature>/spec.md` before implementation begins. The spec
+MUST include user stories with priorities (P1, P2, P3), acceptance criteria, and edge cases.
+Tasks in `specs/<feature>/tasks.md` MUST reference the originating spec and user story.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+**Rationale**: Writing specifications before coding catches edge cases early, clarifies requirements
+with stakeholders, and creates an implementation roadmap. This prevents scope creep and
+ensures deliverable quality.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Development Workflow
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### Pre-Implementation Requirements
+Before writing any production code:
+1. Create feature specification in `specs/<feature-name>/spec.md`
+2. Generate implementation plan in `specs/<feature-name>/plan.md`
+3. Create task list in `specs/<feature-name>/tasks.md`
+4. Obtain sign-off on specification (if applicable)
+
+### Implementation Standards
+- Tasks MUST be implemented in priority order (P1 → P2 → P3)
+- Each task MUST include corresponding tests
+- Commit messages MUST reference Task ID (e.g., `[T001] Add task model`)
+- Code reviews MUST verify spec compliance
+
+### Testing Requirements
+- Unit tests for all model and service functions
+- Integration tests for CLI workflows
+- Error cases MUST be tested explicitly
+
+## Quality Gates
+
+All pull requests and code reviews MUST verify:
+- [ ] Code traces to Task ID in `tasks.md`
+- [ ] Implementation matches specification in `spec.md`
+- [ ] PEP 8 compliance (use linter)
+- [ ] Tests pass for all modified code
+- [ ] Error handling covers edge cases from spec
+- [ ] No hardcoded values that should be configuration
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other development practices. Amendments require:
+1. Documentation of proposed changes
+2. Review and approval
+3. Update to constitution version following semantic versioning
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-01-01 | **Last Amended**: 2026-01-01

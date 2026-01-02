@@ -206,5 +206,17 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 - `history/adr/` — Architecture Decision Records
 - `.specify/` — SpecKit Plus templates and scripts
 
+## Active Technologies
+
+- Python 3.13+ (001-phase1-todo-cli)
+- Standard Python library only (no external dependencies)
+- In-memory storage (list of dictionaries)
+
+## Recent Changes
+
+- 001-phase1-todo-cli: Added Python 3.13+ CLI project with in-memory storage
+
+**Last updated**: 2026-01-01
+
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
