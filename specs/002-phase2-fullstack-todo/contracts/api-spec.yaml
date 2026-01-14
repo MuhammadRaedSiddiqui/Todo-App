@@ -1,0 +1,524 @@
+openapi: 3.0.3
+info:
+  title: Todo API
+  description: RESTful API for Phase 2 Full-Stack Todo App with multi-user support
+  version: 1.0.0
+  contact:
+    name: Todo App Team
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development server
+  - url: https://api.todo-app.example.com/api/v1
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Authentication
+    description: User registration and login
+  - name: Tasks
+    description: Task CRUD operations
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user account
+      description: Create a new user with email and password (FR-001)
+      operationId: registerUser
+      security: []  # No auth required for registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid input (email format, password too short)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Log in with existing account
+      description: Authenticate user and receive JWT token (FR-005)
+      operationId: loginUser
+      security: []  # No auth required for login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{user_id}/tasks:
+    get:
+      tags:
+        - Tasks
+      summary: List all tasks for authenticated user
+      description: Retrieve all tasks belonging to the authenticated user, sorted by creation date descending (FR-015, FR-014)
+      operationId: listTasks
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: User ID (must match authenticated user)
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Tasks retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '401':
+          description: Unauthorized (missing or invalid JWT)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (user_id does not match authenticated user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Tasks
+      summary: Create a new task
+      description: Create a task with title and optional description (FR-009)
+      operationId: createTask
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: User ID (must match authenticated user)
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid input (title required, max lengths exceeded)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{user_id}/tasks/{task_id}:
+    get:
+      tags:
+        - Tasks
+      summary: Get a single task
+      description: Retrieve detailed information for a specific task (FR-016)
+      operationId: getTask
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: User ID (must match authenticated user)
+          schema:
+            type: integer
+            example: 1
+        - name: task_id
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: integer
+            example: 42
+      responses:
+        '200':
+          description: Task retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (task does not belong to user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - Tasks
+      summary: Update a task (full replace)
+      description: Update task title and/or description (FR-019)
+      operationId: updateTask
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: User ID (must match authenticated user)
+          schema:
+            type: integer
+            example: 1
+        - name: task_id
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: integer
+            example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Invalid input (title required, max lengths exceeded)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (task does not belong to user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Tasks
+      summary: Delete a task permanently
+      description: Remove a task from the database (FR-020)
+      operationId: deleteTask
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: User ID (must match authenticated user)
+          schema:
+            type: integer
+            example: 1
+        - name: task_id
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: integer
+            example: 42
+      responses:
+        '204':
+          description: Task deleted successfully (no content)
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (task does not belong to user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{user_id}/tasks/{task_id}/complete:
+    patch:
+      tags:
+        - Tasks
+      summary: Toggle task completion status
+      description: Mark task as complete or incomplete (FR-017, FR-018)
+      operationId: toggleTaskComplete
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: User ID (must match authenticated user)
+          schema:
+            type: integer
+            example: 1
+        - name: task_id
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: integer
+            example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_complete:
+                  type: boolean
+                  description: New completion status
+                  example: true
+              required:
+                - is_complete
+      responses:
+        '200':
+          description: Task completion status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (task does not belong to user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from Better Auth
+
+  schemas:
+    UserRegister:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: user@example.com
+          description: Valid email address (FR-002)
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          example: securePassword123
+          description: Password (minimum 8 characters per FR-003)
+
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          example: securePassword123
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            email:
+              type: string
+              format: email
+              example: user@example.com
+            created_at:
+              type: string
+              format: date-time
+              example: '2026-01-05T10:30:00Z'
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: JWT token for authentication (7-day expiration)
+
+    TaskCreate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          maxLength: 200
+          example: Buy groceries
+          description: Task title (required, max 200 chars per FR-010)
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+          example: Milk, eggs, bread, and butter
+          description: Task description (optional, max 2000 chars per FR-011)
+
+    TaskUpdate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          maxLength: 200
+          example: Buy groceries and toiletries
+          description: Updated task title
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+          example: Milk, eggs, bread, butter, toothpaste, and soap
+          description: Updated task description
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+          description: Unique task ID (FR-012)
+        title:
+          type: string
+          maxLength: 200
+          example: Buy groceries
+        description:
+          type: string
+          maxLength: 2000
+          nullable: true
+          example: Milk, eggs, bread, and butter
+        is_complete:
+          type: boolean
+          example: false
+          description: Completion status (default false)
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-01-05T10:30:00Z'
+          description: Creation timestamp (FR-013)
+        updated_at:
+          type: string
+          format: date-time
+          example: '2026-01-05T12:45:00Z'
+          description: Last update timestamp
+        user_id:
+          type: integer
+          example: 1
+          description: Owner user ID (FR-021)
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: Invalid email or password
+          description: Human-readable error message
+        code:
+          type: string
+          example: INVALID_CREDENTIALS
+          description: Machine-readable error code (optional)

@@ -68,19 +68,23 @@ tests/
 ├── integration/
 └── unit/
 
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+# [REMOVE IF UNUSED] Option 2: Monorepo (when "frontend" + "backend" detected - CONSTITUTION MANDATE for Todo App)
 backend/
 ├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
+│   ├── models/          # SQLModel classes for Neon PostgreSQL
+│   ├── services/        # Business logic layer
+│   ├── api/             # FastAPI endpoints (RESTful)
+│   └── auth/            # JWT verification, user scope
 └── tests/
+    ├── unit/
+    ├── integration/
+    └── contract/
 
 frontend/
 ├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
+│   ├── app/             # Next.js 16+ App Router
+│   ├── components/      # React components
+│   └── lib/             # Utilities, API clients
 └── tests/
 
 # [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)

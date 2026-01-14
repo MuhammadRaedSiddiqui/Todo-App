@@ -130,3 +130,26 @@ Thumbs.db
 
 # Project specific
 *.log
+
+# Frontend (Next.js)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/.vercel
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Backend (FastAPI)
+backend/.env
+backend/.env.local
+backend/__pycache__/
+backend/*.pyc
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/alembic/versions/*.py
+!backend/alembic/versions/__init__.py

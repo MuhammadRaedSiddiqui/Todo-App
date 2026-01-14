@@ -21,7 +21,7 @@ description: "Task list template for feature implementation"
 ## Path Conventions
 
 - **Single project**: `src/`, `tests/` at repository root
-- **Web app**: `backend/src/`, `frontend/src/`
+- **Monorepo (Todo App)**: `backend/src/`, `frontend/src/` (CONSTITUTION MANDATE: Next.js 16+ frontend, FastAPI backend, Neon PostgreSQL, Better Auth)
 - **Mobile**: `api/src/`, `ios/src/` or `android/src/`
 - Paths shown below assume single project - adjust based on plan.md structure
 
