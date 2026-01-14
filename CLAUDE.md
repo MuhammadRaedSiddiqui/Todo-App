@@ -208,15 +208,30 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Active Technologies
 
-- Python 3.13+ (001-phase1-todo-cli)
-- Standard Python library only (no external dependencies)
-- In-memory storage (list of dictionaries)
+**Architecture**: Monorepo (Constitution v2.0.0)
+
+**Frontend**:
+- Next.js 16+ (App Router)
+- React with TypeScript
+- Tailwind CSS
+- Better Auth (JWT authentication)
+
+**Backend**:
+- Python 3.13+ with FastAPI
+- SQLModel ORM
+- Neon Serverless PostgreSQL
+- JWT verification (shared secret)
+
+**Development Tools**:
+- UV (Python dependency management)
+- ESLint + Prettier (TypeScript/React)
 
 ## Recent Changes
 
-- 001-phase1-todo-cli: Added Python 3.13+ CLI project with in-memory storage
+- 2026-01-05: Constitution amended to v2.0.0 - REVOKED in-memory constraint, mandated monorepo architecture with Next.js frontend, FastAPI backend, Neon PostgreSQL, Better Auth, and RESTful API standard
+- 001-phase1-todo-cli: Added Python 3.13+ CLI project with in-memory storage (Phase 1 - now superseded by Constitution v2.0.0)
 
-**Last updated**: 2026-01-01
+**Last updated**: 2026-01-05
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
