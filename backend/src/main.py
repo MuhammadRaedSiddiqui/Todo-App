@@ -10,6 +10,8 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.api.auth import router as auth_router
+from src.api.chat import router as chat_router
+from src.api.conversations import router as conversations_router
 from src.api.tasks import router as tasks_router
 from src.core.config import settings
 
@@ -140,3 +142,5 @@ def health_check():
 # Mount API routers
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
 app.include_router(tasks_router, prefix=settings.API_V1_PREFIX)
+app.include_router(chat_router, prefix=settings.API_V1_PREFIX)
+app.include_router(conversations_router, prefix=settings.API_V1_PREFIX)

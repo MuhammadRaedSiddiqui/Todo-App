@@ -4,6 +4,7 @@ Loads environment variables with type validation.
 """
 
 from pydantic_settings import BaseSettings
+from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -17,6 +18,9 @@ class Settings(BaseSettings):
         ACCESS_TOKEN_EXPIRE_MINUTES: Token expiration in minutes (default: 10080 = 7 days)
         API_V1_PREFIX: API route prefix (default: /api/v1)
         DEBUG: Debug mode flag (default: False)
+        GROQ_API_KEY: Groq API key for AI chatbot (Phase 3)
+        GROQ_MODEL: Groq model name (default: llama-3.3-70b-versatile)
+        GROQ_BASE_URL: Groq API base URL (default: https://api.groq.com/openai/v1)
     """
 
     # Database
@@ -33,6 +37,25 @@ class Settings(BaseSettings):
     # Application Settings
     DEBUG: bool = False
 
+    # Groq AI Configuration (Phase 3)
+    GROQ_API_KEY: Optional[str] = None
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    GROQ_BASE_URL: str = "https://api.groq.com/openai/v1"
+
+    # OpenAI-compatible fields (for compatibility with existing .env)
+    OPENAI_API_KEY: Optional[str] = None
+    OPENAI_BASE_URL: Optional[str] = None
+    OPENAI_MODEL: Optional[str] = None
+    OPENAI_TEMPERATURE: Optional[float] = None
+    OPENAI_MAX_TOKENS: Optional[int] = None
+
+    # MCP Server Configuration
+    MCP_SERVER_NAME: Optional[str] = None
+    MCP_SERVER_VERSION: Optional[str] = None
+
+    # Chat Rate Limiting
+    CHAT_RATE_LIMIT: Optional[int] = None
+
     class Config:
         env_file = ".env"
         case_sensitive = True
@@ -40,3 +63,4 @@ class Settings(BaseSettings):
 
 # Global settings instance
 settings = Settings()
+
