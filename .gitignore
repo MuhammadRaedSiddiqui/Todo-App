@@ -153,3 +153,6 @@ backend/.pytest_cache/
 backend/.ruff_cache/
 backend/alembic/versions/*.py
 !backend/alembic/versions/__init__.py
+
+.vercel
+.env*.local

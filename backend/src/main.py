@@ -10,6 +10,8 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.api.auth import router as auth_router
+from src.api.chat import router as chat_router
+from src.api.conversations import router as conversations_router
 from src.api.tasks import router as tasks_router
 from src.core.config import settings
 
@@ -29,9 +31,20 @@ app = FastAPI(
 )
 
 # CORS middleware for frontend communication
+# Allow both local development and production frontend
+allowed_origins = [
+    "http://localhost:3000",  # Local development
+    "https://frontend-xi-steel-95.vercel.app",  # Production frontend
+]
+
+# Add additional origins from environment variable if set
+import os
+if cors_origins := os.getenv("CORS_ORIGINS"):
+    allowed_origins.extend(cors_origins.split(","))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Next.js dev server
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -129,3 +142,5 @@ def health_check():
 # Mount API routers
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
 app.include_router(tasks_router, prefix=settings.API_V1_PREFIX)
+app.include_router(chat_router, prefix=settings.API_V1_PREFIX)
+app.include_router(conversations_router, prefix=settings.API_V1_PREFIX)

@@ -1,0 +1,314 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AI Chatbot Tool Schemas",
+  "description": "Tool calling schemas for AI chatbot following Model Context Protocol (MCP) pattern",
+  "version": "1.0.0",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "add_task",
+        "description": "Create a new todo task for the authenticated user. Use this when the user wants to add, create, or remember something to do.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "The task title or description. Should be clear and concise.",
+              "minLength": 1,
+              "maxLength": 200,
+              "examples": [
+                "Buy groceries",
+                "Finish project report",
+                "Call dentist for appointment"
+              ]
+            },
+            "due_date": {
+              "type": "string",
+              "description": "Optional due date in ISO 8601 format (YYYY-MM-DD). Parse natural language dates like 'tomorrow', 'next Monday', 'in 3 days' into ISO format.",
+              "format": "date",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "nullable": true,
+              "examples": [
+                "2026-01-20",
+                "2026-02-15"
+              ]
+            },
+            "priority": {
+              "type": "string",
+              "enum": ["low", "medium", "high"],
+              "description": "Task priority level. Default to 'medium' if not specified by user.",
+              "default": "medium"
+            },
+            "notes": {
+              "type": "string",
+              "description": "Optional additional notes or details about the task",
+              "maxLength": 1000,
+              "nullable": true
+            }
+          },
+          "required": ["title"],
+          "additionalProperties": false
+        },
+        "returns": {
+          "type": "object",
+          "properties": {
+            "task_id": {
+              "type": "integer",
+              "description": "Unique identifier of the created task"
+            },
+            "title": {
+              "type": "string",
+              "description": "The task title as stored"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["created"],
+              "description": "Confirmation status"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "list_tasks",
+        "description": "Retrieve all tasks for the authenticated user. Use this when the user wants to see, view, or check their tasks.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["pending", "completed", "all"],
+              "description": "Filter tasks by completion status. 'pending' shows incomplete tasks, 'completed' shows finished tasks, 'all' shows everything.",
+              "default": "all"
+            },
+            "priority": {
+              "type": "string",
+              "enum": ["low", "medium", "high"],
+              "description": "Optional filter by priority level",
+              "nullable": true
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Maximum number of tasks to return",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          },
+          "required": [],
+          "additionalProperties": false
+        },
+        "returns": {
+          "type": "object",
+          "properties": {
+            "tasks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "task_id": {
+                    "type": "integer"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["pending", "completed"]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": ["low", "medium", "high"]
+                  },
+                  "due_date": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            },
+            "total": {
+              "type": "integer",
+              "description": "Total number of tasks matching the filter"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "update_task",
+        "description": "Update an existing task. Use this when the user wants to modify, change, edit, or mark a task as complete/incomplete.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task_id": {
+              "type": "integer",
+              "description": "The unique identifier of the task to update. Must be a task owned by the authenticated user.",
+              "minimum": 1
+            },
+            "title": {
+              "type": "string",
+              "description": "New task title (optional)",
+              "minLength": 1,
+              "maxLength": 200,
+              "nullable": true
+            },
+            "status": {
+              "type": "string",
+              "enum": ["pending", "completed"],
+              "description": "New task status. Use 'completed' to mark as done, 'pending' to mark as incomplete.",
+              "nullable": true
+            },
+            "priority": {
+              "type": "string",
+              "enum": ["low", "medium", "high"],
+              "description": "New priority level (optional)",
+              "nullable": true
+            },
+            "due_date": {
+              "type": "string",
+              "description": "New due date in ISO 8601 format (YYYY-MM-DD), or null to remove due date",
+              "format": "date",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "nullable": true
+            },
+            "notes": {
+              "type": "string",
+              "description": "New notes (optional)",
+              "maxLength": 1000,
+              "nullable": true
+            }
+          },
+          "required": ["task_id"],
+          "additionalProperties": false
+        },
+        "returns": {
+          "type": "object",
+          "properties": {
+            "task_id": {
+              "type": "integer",
+              "description": "ID of the updated task"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["updated"],
+              "description": "Confirmation status"
+            },
+            "changes": {
+              "type": "object",
+              "description": "Fields that were changed"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "delete_task",
+        "description": "Delete a task permanently. Use this when the user wants to remove, delete, or get rid of a task. Always confirm with the user before calling this function.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task_id": {
+              "type": "integer",
+              "description": "The unique identifier of the task to delete. Must be a task owned by the authenticated user.",
+              "minimum": 1
+            }
+          },
+          "required": ["task_id"],
+          "additionalProperties": false
+        },
+        "returns": {
+          "type": "object",
+          "properties": {
+            "task_id": {
+              "type": "integer",
+              "description": "ID of the deleted task"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["deleted"],
+              "description": "Confirmation status"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_task",
+        "description": "Retrieve details of a specific task by ID. Use this when the user references a specific task and you need more information about it.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "task_id": {
+              "type": "integer",
+              "description": "The unique identifier of the task to retrieve",
+              "minimum": 1
+            }
+          },
+          "required": ["task_id"],
+          "additionalProperties": false
+        },
+        "returns": {
+          "type": "object",
+          "properties": {
+            "task_id": {
+              "type": "integer"
+            },
+            "title": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["pending", "completed"]
+            },
+            "priority": {
+              "type": "string",
+              "enum": ["low", "medium", "high"]
+            },
+            "due_date": {
+              "type": "string",
+              "format": "date",
+              "nullable": true
+            },
+            "notes": {
+              "type": "string",
+              "nullable": true
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "authentication": "JWT Bearer token required for all tool executions",
+    "user_scoping": "All tools automatically scope operations to the authenticated user_id",
+    "error_handling": {
+      "task_not_found": "Returns error if task_id doesn't exist or doesn't belong to user",
+      "invalid_parameters": "Returns validation error with details",
+      "permission_denied": "Returns error if user lacks permission"
+    },
+    "rate_limiting": "Subject to API rate limits (30 requests/minute on free tier)"
+  }
+}

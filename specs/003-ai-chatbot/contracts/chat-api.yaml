@@ -1,0 +1,416 @@
+openapi: 3.0.3
+info:
+  title: AI Chatbot API
+  description: RESTful API for AI-powered todo task management chatbot
+  version: 1.0.0
+  contact:
+    name: Todo App Team
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.todo-app.com
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /api/chat/message:
+    post:
+      summary: Send chat message
+      description: |
+        Send a message to the AI chatbot and receive a response.
+        The endpoint handles conversation history retrieval, AI inference,
+        and tool execution automatically.
+      operationId: sendChatMessage
+      tags:
+        - Chat
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  description: User's message text
+                  example: "Add a task to buy groceries tomorrow"
+                  minLength: 1
+                  maxLength: 2000
+                conversation_id:
+                  type: integer
+                  description: |
+                    Existing conversation ID to continue.
+                    If omitted, a new conversation is created.
+                  example: 123
+                  nullable: true
+            examples:
+              newConversation:
+                summary: Start new conversation
+                value:
+                  message: "Show me all my tasks"
+              continueConversation:
+                summary: Continue existing conversation
+                value:
+                  message: "Mark the first one as complete"
+                  conversation_id: 123
+      responses:
+        '200':
+          description: Successful response with AI message
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                  - conversation_id
+                  - role
+                properties:
+                  message:
+                    type: string
+                    description: AI assistant's response
+                    example: "I've added 'buy groceries' to your tasks with a due date of tomorrow."
+                  conversation_id:
+                    type: integer
+                    description: Conversation ID (new or existing)
+                    example: 123
+                  role:
+                    type: string
+                    enum: [assistant]
+                    description: Message role (always 'assistant' for responses)
+                  tool_calls:
+                    type: array
+                    description: Tools executed during this interaction (for debugging)
+                    items:
+                      type: object
+                      properties:
+                        tool_name:
+                          type: string
+                          example: "add_task"
+                        parameters:
+                          type: object
+                          example: { "title": "buy groceries", "due_date": "2026-01-19" }
+                        result:
+                          type: object
+                          example: { "task_id": 456, "status": "created" }
+        '400':
+          description: Bad request (invalid input)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Message cannot be empty"
+                code: "INVALID_INPUT"
+        '401':
+          description: Unauthorized (missing or invalid JWT)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Invalid or expired token"
+                code: "UNAUTHORIZED"
+        '403':
+          description: Forbidden (conversation belongs to different user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "You don't have access to this conversation"
+                code: "FORBIDDEN"
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Conversation not found"
+                code: "NOT_FOUND"
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Too many requests. Please try again later."
+                code: "RATE_LIMIT_EXCEEDED"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "An unexpected error occurred"
+                code: "INTERNAL_ERROR"
+
+  /api/chat/conversations:
+    get:
+      summary: List user's conversations
+      description: Retrieve all conversations for the authenticated user, ordered by most recent first
+      operationId: listConversations
+      tags:
+        - Conversations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of conversations to return
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          description: Number of conversations to skip (for pagination)
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - conversations
+                  - total
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Conversation'
+                  total:
+                    type: integer
+                    description: Total number of conversations for this user
+                    example: 45
+              example:
+                conversations:
+                  - id: 123
+                    created_at: "2026-01-18T10:30:00Z"
+                    updated_at: "2026-01-18T11:45:00Z"
+                    message_count: 12
+                    preview: "Show me all my tasks"
+                  - id: 122
+                    created_at: "2026-01-17T14:20:00Z"
+                    updated_at: "2026-01-17T14:35:00Z"
+                    message_count: 8
+                    preview: "Add a task to finish the report"
+                total: 45
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/chat/conversations/{conversation_id}:
+    get:
+      summary: Get conversation details
+      description: Retrieve a specific conversation with all messages
+      operationId: getConversation
+      tags:
+        - Conversations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          description: Conversation ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - created_at
+                  - updated_at
+                  - messages
+                properties:
+                  id:
+                    type: integer
+                    example: 123
+                  created_at:
+                    type: string
+                    format: date-time
+                    example: "2026-01-18T10:30:00Z"
+                  updated_at:
+                    type: string
+                    format: date-time
+                    example: "2026-01-18T11:45:00Z"
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (conversation belongs to different user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete conversation
+      description: Delete a conversation and all its messages
+      operationId: deleteConversation
+      tags:
+        - Conversations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          description: Conversation ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Conversation deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (conversation belongs to different user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from Better Auth authentication
+
+  schemas:
+    Conversation:
+      type: object
+      required:
+        - id
+        - created_at
+        - updated_at
+        - message_count
+      properties:
+        id:
+          type: integer
+          description: Unique conversation identifier
+          example: 123
+        created_at:
+          type: string
+          format: date-time
+          description: When the conversation was created
+          example: "2026-01-18T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the last message was added
+          example: "2026-01-18T11:45:00Z"
+        message_count:
+          type: integer
+          description: Total number of messages in conversation
+          example: 12
+        preview:
+          type: string
+          description: First user message (for display)
+          example: "Show me all my tasks"
+          maxLength: 100
+
+    Message:
+      type: object
+      required:
+        - id
+        - role
+        - content
+        - created_at
+      properties:
+        id:
+          type: integer
+          description: Unique message identifier
+          example: 456
+        role:
+          type: string
+          enum: [user, assistant, tool]
+          description: Message sender type
+          example: "user"
+        content:
+          type: string
+          description: Message text or tool result
+          example: "Show me all my tasks"
+        tool_call_id:
+          type: string
+          description: Tool call identifier (for tool messages)
+          example: "call_abc123"
+          nullable: true
+        tool_name:
+          type: string
+          description: Name of executed tool (for tool messages)
+          example: "list_tasks"
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          description: When the message was created
+          example: "2026-01-18T10:30:15Z"
+
+    Error:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+          example: "Invalid input"
+        code:
+          type: string
+          description: Machine-readable error code
+          example: "INVALID_INPUT"
+        details:
+          type: object
+          description: Additional error context
+          nullable: true
